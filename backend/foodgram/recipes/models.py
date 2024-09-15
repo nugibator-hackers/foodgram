@@ -48,24 +48,26 @@ class Recipe(models.Model):
         'Название',
         max_length=100
     )
-    tags = models.ForeignKey(
+    tags = models.ManyToManyField(
         Tag,
         related_name='recipes',
-        verbose_name='Тэг',
-        on_delete=models.CASCADE,
+        verbose_name='Тэги',
     )
-    ingredients = models.ForeignKey(
+    ingredients = models.ManyToManyField(
         Ingredient,
         related_name='recipes',
         verbose_name='Ингредиент',
-        on_delete=models.CASCADE,
+        through='CountIngredientInRecipe'
     )
     text = models.TextField(
         'Описание',
         max_length=1000
     )
-    time = models.PositiveIntegerField(
-        'Время'
+    cooking_time = models.IntegerField(
+        verbose_name='Время приготовления',
+        validators=[
+            MinValueValidator(1)
+        ]
     )
     image = models.ImageField(
         'Фото',

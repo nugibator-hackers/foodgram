@@ -11,7 +11,7 @@ class IngredientFilter(FilterSet):
 
 class RecipeFilter(FilterSet):
     tag = filters.ModelChoiceFilter(
-        field_name='tagsslug',
+        field_name='tags__slug',
         to_field_name='slug',
         queryset=Tag.objects.all()
     )
@@ -22,11 +22,11 @@ class RecipeFilter(FilterSet):
         model = Recipe
         fields = ('tags', 'author',)
 
-    def filter_favorite(self, name, queryset, value):
+    def filter_favorite(self, queryset, name, value):
         if value:
             return queryset.filter(favoriteuser=self.request.user)
         return queryset
 
-    def filter_shopping_cart(self, name, queryset, value):
+    def filter_shopping_cart(self, queryset, name, value):
         if value:
             return queryset.filter(shoppingcart__user=self.request.user)
