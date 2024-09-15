@@ -130,6 +130,33 @@ class RecipeSerializer(serializers.ModelSerializer):
             recipe=obj
         ).exists()
     
+class RecipeSerializer(serializers.ModelSerializer):
+    image = Base64ImageField()
+    tags = TagSerializers(many=True)
+    ingredients = CountIngredientInRecipeSerializer(
+        many=True,
+        source='countingredientinrecipe'
+    )
+    is_favorited = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
+    author = UserSerializer(read_only=True)
+
+    class Meta:
+        model = Recipe
+        field = ['id', 'name', 'image', 'cooking_time']
+
+    def get_is_favorited(self, obj):
+        user = self.context.get('request').user
+        if user.is_anonymous:
+            return False
+        return obj.favorite.filter(user=user).exists()
+
+    def get_is_in_shopping_cart(self, obj):
+        user = self.context.get('request').user
+        if user.is_anonymous:
+            return False
+        return obj.cart.filter(user=user).exists()
+    
 class CreateUserSerializers(UserSerializer):
     class Meta:
         model = User

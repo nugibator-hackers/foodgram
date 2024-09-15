@@ -54,9 +54,11 @@ class Recipe(models.Model):
         verbose_name='Тэги',
     )
     ingredients = models.ManyToManyField(
+    ingredients = models.ManyToManyField(
         Ingredient,
         related_name='recipes',
         verbose_name='Ингредиент',
+        through='CountIngredientInRecipe'
         through='CountIngredientInRecipe'
     )
     text = models.TextField(
