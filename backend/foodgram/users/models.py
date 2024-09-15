@@ -21,10 +21,23 @@ class User(AbstractUser):
         unique=True
     )
 
+    # is_subscribed = models.BooleanField(
+    #     'Подписка',
+    #     default=False
+    # )
+
+    REQUIRED_FIELDS = ['first_name', 'last_name', 'username']
+    USERNAME_FIELD = 'email'
+
     class Meta:
-        ordering = ('username',)
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['username', 'email'],
+                name='unique_username_email'
+            )
+        ]
 
     def __str__(self):
         return self.username

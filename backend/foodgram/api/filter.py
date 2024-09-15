@@ -11,7 +11,7 @@ class IngredientFilter(FilterSet):
 
 class RecipeFilter(FilterSet):
     tag = filters.ModelChoiceFilter(
-        field_name='tagsslug',
+        field_name='tags__slug',
         to_field_name='slug',
         queryset=Tag.objects.all()
     )

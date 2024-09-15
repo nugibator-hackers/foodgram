@@ -1,11 +1,10 @@
 from django.shortcuts import render
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from recipes.models import Ingredient, Tag, Recipe, Favorite, ShoppingCart, CountIngredientInRecipe
-from users.models import Subscribe
+from users.models import Subscribe  
 from .serializers import IngredientSerializers, TagSerializers, RecipeSerializer, UserSerializer, SubscribeSerializers, RecipeCreateUpdateSerializer, FavoriteSerializer
 from rest_framework.response import Response
 from rest_framework import status
-from users.models import User
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
@@ -14,11 +13,17 @@ from django.http import HttpResponse
 from api.pagination import PagePagination
 from api.permission import AuthorOrReadOnly
 from djoser.views import UserViewSet as DjoserUserViewSet
+from django.contrib.auth import get_user_model
+from api.filter import IngredientFilter, RecipeFilter
+from django_filters.rest_framework import DjangoFilterBackend
+
+User = get_user_model()
 
 class IngredientViewSet(ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializers
-
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = IngredientFilter
 class TagViewSet(ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializers
@@ -28,9 +33,11 @@ class RecipeViewSet(ModelViewSet):
     serializer_class = RecipeSerializer
     pagination_class = PagePagination
     permission_classes = [AuthorOrReadOnly]
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = RecipeFilter
 
     def perform_create(self, serializer):
-        return serializer.save(author=self.request.user)
+        serializer.save(author=self.request.user)
     
     def add_recipe(self, user, model, pk):
         recipe = get_object_or_404(Recipe, id=pk)
@@ -112,42 +119,47 @@ class RecipeViewSet(ModelViewSet):
 
 class UserViewSet(DjoserUserViewSet):
     queryset = User.objects.all()
-    # serializer_class = UserSerializer
+    pagination_class = PagePagination
 
     @action(
         detail=True,
-        methods=['post', 'delete'],
-        permission_classes=[IsAuthenticated]
+        methods=['post'],
+        permission_classes=[IsAuthenticated],
     )
-    def subscribes(self, request, id):
+    def subscribe(self, request, id):
+        author = get_object_or_404(User, id=id)
+        data = {
+            'author': author.id,
+            'user': request.user.id
+        }
+        context = {'request': request}
+        serializer = RecipeCreateUpdateSerializer(
+            data=data,
+            context=context
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save(user=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @subscribe.mapping.delete
+    def delete_subscribe(self, request, id):
         user = request.user
         author = get_object_or_404(User, id=id)
-        if request.method == 'POST':
-            serializer = SubscribeSerializers(
-                author,
-                data=request.data,
-                context={"request": request}
-            )
-            serializer.is_valid(raise_exception=True)
-            sub = Subscribe.objects.cerate(user=user, author=author)
-            sub.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        if request.method == 'DELETE':
-            sub = get_object_or_404(
-                Subscribe,
-                user=user,
-                author=author
-            )
-            sub.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        sub = get_object_or_404(
+            Subscribe,
+            user=user,
+            author=author
+        )
+        sub.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
     @action(
         methods=['GET'],
-        detail=True,
-        permission_classes=[IsAuthenticated]
+        detail=False,
+        permission_classes=[IsAuthenticated],
     )
-    def is_subscriptions(self, request):
-        user = request.user
-        queryset = User.objects.filter(follow__user=user)
+    def subscriptions(self, request):
+        queryset = User.objects.filter(follow__user=request.user)
         pages = self.paginate_queryset(queryset)
         serializer = SubscribeSerializers(
             pages,
