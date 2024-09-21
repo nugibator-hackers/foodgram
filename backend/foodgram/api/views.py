@@ -158,6 +158,7 @@ class CreateFollowSerializer(serializers.ModelSerializer):
             }
         ).data
 
+
 class UserViewSet(DjoserUserViewSet):
     queryset = User.objects.all()
     pagination_class = PagePagination
@@ -208,3 +209,4 @@ class UserViewSet(DjoserUserViewSet):
             context={'request': request}
         )
         return self.get_paginated_response(serializer.data)
+    
