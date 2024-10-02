@@ -1,8 +1,8 @@
 from django.shortcuts import render
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from recipes.models import Ingredient, Tag, Recipe, Favorite, ShoppingCart, CountIngredientInRecipe
-from users.models import Subscribe    
-from .serializers import IngredientSerializers, TagSerializers, RecipeSerializer, UserSerializer, SubscribeSerializers, RecipeCreateUpdateSerializer, FavoriteSerializer, ShopingCartSerializer
+from users.models import Follow    
+from .serializers import IngredientSerializers, TagSerializers, RecipeSerializer, UserSerializer, FollowSerializers, RecipeCreateUpdateSerializer, FavoriteSerializer, ShopingCartSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
@@ -131,33 +131,6 @@ class RecipeViewSet(ModelViewSet):
             return RecipeSerializer
         return RecipeCreateUpdateSerializer
 
-class CreateFollowSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Follow
-        fields = ('user', 'author')
-        validators = [
-            serializers.UniqueTogetherValidator(
-                queryset=Follow.objects.all(),
-                fields=('author', 'user'),
-                message='Невозможно подписаться, так как вы уже подписаны'
-            )
-        ]
-
-    def validate(self, data):
-        if data['user'] == data['author']:
-            raise serializers.ValidationError(
-                'Нельзя подписаться на себя'
-            )
-        return data
-
-    def to_representation(self, instance):
-        return FollowSerializers(
-            instance.author, context={
-                'request': self.context.get('request')
-            }
-        ).data
-
 
 class UserViewSet(DjoserUserViewSet):
     queryset = User.objects.all()
@@ -168,27 +141,31 @@ class UserViewSet(DjoserUserViewSet):
         methods=['post'],
         permission_classes=[IsAuthenticated],
     )
-    def subscribe(self, request, id):
-        author = get_object_or_404(User, id=id)
-        data = {
-            'author': author.id,
-            'user': request.user.id
-        }
-        context = {'request': request}
-        serializer = RecipeCreateUpdateSerializer(
-            data=data,
-            context=context
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save(user=request.user)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    def subscribe(self, request, **kwargs):
+        user = request.user
+        author_id = self.kwargs.get("id")
+        author = get_object_or_404(User, id=author_id)
+
+        if request.method == "POST":
+            serializer = FollowSerializers(
+                author, data=request.data, context={"request": request}
+            )
+            serializer.is_valid(raise_exception=True)
+            Follow.objects.create(user=user, author=author)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        if request.method == "DELETE":
+            subscription = get_object_or_404(
+                Follow, user=user, author=author)
+            subscription.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
     @subscribe.mapping.delete
     def delete_subscribe(self, request, id):
         user = request.user
         author = get_object_or_404(User, id=id)
         sub = get_object_or_404(
-            Subscribe,
+            Follow,
             user=user,
             author=author
         )
@@ -203,7 +180,7 @@ class UserViewSet(DjoserUserViewSet):
     def subscriptions(self, request):
         queryset = User.objects.filter(follow__user=request.user)
         pages = self.paginate_queryset(queryset)
-        serializer = SubscribeSerializers(
+        serializer = FollowSerializers(
             pages,
             many=True,
             context={'request': request}

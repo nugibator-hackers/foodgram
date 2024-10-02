@@ -42,11 +42,11 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
     
-class Subscribe(models.Model):
+class Follow(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='subscriber',
+        related_name='follower',
         verbose_name='Подписчик'
     )
     author = models.ForeignKey(
