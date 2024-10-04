@@ -21,10 +21,6 @@ class User(AbstractUser):
         unique=True
     )
 
-    # is_subscribed = models.BooleanField(
-    #     'Подписка',
-    #     default=False
-    # )
 
     REQUIRED_FIELDS = ['first_name', 'last_name', 'username']
     USERNAME_FIELD = 'email'
