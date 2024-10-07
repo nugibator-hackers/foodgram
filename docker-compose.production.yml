@@ -34,7 +34,7 @@ services:
   nginx:
     image: nag991/foodgram_nginx:latest
     ports:
-      - "8080:80"
+      - "8008:80"
     volumes:
       - static:/static
       - media:/media

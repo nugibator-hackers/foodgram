@@ -11,4 +11,4 @@ RUN pip3 install -r requirements.txt --no-cache-dir
 
 COPY . .
 
-CMD ["gunicorn", "backend.wsgi", "--bind", "0:8080"]
+CMD ["gunicorn", "backend.wsgi", "--bind", "0:8008"]
