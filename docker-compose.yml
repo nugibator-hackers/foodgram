@@ -14,7 +14,7 @@ services:
       - pg_data:/var/lib/postgresql/data/
 
   backend:
-    image: mystique333/foodgram_backend:latest
+    build: ./backend/
     env_file: .env
     volumes:
       - static:/backend_static
@@ -23,7 +23,7 @@ services:
       - db
 
   frontend:
-    image: mystique333/foodgram_frontend:latest
+    build: ./frontend/
     env_file: .env
     command: cp -r /app/build/. /static/
     volumes:
@@ -32,7 +32,7 @@ services:
       - backend
 
   nginx:
-    image: mystique333/foodgram_gateway:latest
+    build: ./nginx/
     ports:
       - "8000:80"
     volumes:
