@@ -37,6 +37,7 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
 
+
 class Follow(models.Model):
     user = models.ForeignKey(
         User,

@@ -27,6 +27,7 @@ class IngredientSerializer(ModelSerializer):
 class PasswordSerializer(serializers.Serializer):
     current_password = serializers.CharField(write_only=True)
     new_password = serializers.CharField(write_only=True)
+
     def validate_current_password(self, value):
         user = self.context['request'].user
         if not user.check_password(value):
@@ -107,7 +108,7 @@ class UsersCreateSerializer(UserCreateSerializer):
             'last_name',
             'password'
         )
-        
+
     def validate_username(self, value):
         if value.lower() == 'me':
             raise serializers.ValidationError(
@@ -195,9 +196,9 @@ class RecipeIngredientWriteSerializer(ModelSerializer):
         max_value=1000,
         error_messages={
             'min_value':
-                f'Количество ингредиентов должно быть больше 1',
+                'Количество ингредиентов должно быть больше 1',
             'max_value':
-                f'Количество ингредиентов должно быть меньше 1000',
+                'Количество ингредиентов должно быть меньше 1000',
         }
     )
 
@@ -220,8 +221,8 @@ class RecipeWriteSerializer(ModelSerializer):
         min_value=1,
         max_value=1000,
         error_messages={
-            'min_value': f'Время приготовления не менее 1 минут!',
-            'max_value': f'Время приготовления не более 1000 минут!',
+            'min_value': 'Время приготовления не менее 1 минут!',
+            'max_value': 'Время приготовления не более 1000 минут!',
         }
     )
 
@@ -387,6 +388,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
     def get_recipes_count(self, instance):
         return instance.author.recipes.count()
 
+
 class SimpleUserSerializer(serializers.ModelSerializer):
     is_subscribed = serializers.SerializerMethodField()
 
@@ -399,8 +401,9 @@ class SimpleUserSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
             return Follow.objects.filter(user=request.user,
-                                            author=obj).exists()
+                                         author=obj).exists()
         return False
+
 
 class RecipeShortSerializer(serializers.ModelSerializer):
     class Meta:
