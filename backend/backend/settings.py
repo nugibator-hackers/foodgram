@@ -127,7 +127,6 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 6,
 }
 
-TEST_EMAIL = 'Testemail@gmail.com'
 
 DJOSER = {
     'LOGIN_FIELD': 'email',
