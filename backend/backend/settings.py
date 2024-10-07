@@ -10,7 +10,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'default_secret_key')
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['158.160.26.136', '127.0.0.1', 'localhost', 'taski957.zapto.org']
+ALLOWED_HOSTS = ['158.160.26.136', '127.0.0.1', 'localhost', 'foodgram64.hopto.org']
 
 
 INSTALLED_APPS = [
