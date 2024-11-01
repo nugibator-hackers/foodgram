@@ -313,8 +313,8 @@ class RecipeWriteSerializer(ModelSerializer):
             ingredient_id = item['ingredient']['id']
             if ingredient_id in ingredient_ids:
                 raise ValidationError(
-                   {'ingredients': 'Ингредиенты не могут повторяться!'}
-                    )
+                    {'ingredients': 'Ингредиенты не могут повторяться!'}
+                )
             ingredient_ids.add(ingredient_id)
             ingredients_set.add(ingredient_id)
 
