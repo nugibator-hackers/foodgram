@@ -117,7 +117,8 @@ class UserViewSet(ModelViewSet):
             #         status=status.HTTP_400_BAD_REQUEST
             #     )
 
-            existing_subscription = user.subscribing.filter(author=author).first()
+            existing_subscription = user.subscribing.filter(author=author
+                                                            ).first()
 
             if existing_subscription:
                 serializer = SubscriptionSerializer(

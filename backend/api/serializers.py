@@ -268,7 +268,7 @@ class RecipeWriteSerializer(ModelSerializer):
     #     for item in ingredients:
     #         if 'id' not in item['ingredient']:
     #             raise ValidationError(
-    #                 {'ingredients': 'Указан некорректный формат ингредиента!'}
+    #               {'ingredients': 'Указан некорректный формат ингредиента!'}
     #             )
 
     #         try:
@@ -298,11 +298,11 @@ class RecipeWriteSerializer(ModelSerializer):
     def validate_ingredients(self, value):
         ingredients = value
         if (
-        ingredients is None
-        or not isinstance(ingredients, list)
-        or len(ingredients) == 0
+            ingredients is None
+            or not isinstance(ingredients, list)
+            or len(ingredients) == 0
         ):
-         raise ValidationError(
+            raise ValidationError(
                 {'ingredients': 'Нужен хотя бы один ингредиент!'}
             )
 
@@ -312,9 +312,9 @@ class RecipeWriteSerializer(ModelSerializer):
         for item in ingredients:
             ingredient_id = item['ingredient']['id']
             if ingredient_id in ingredient_ids:
-               raise ValidationError(
+                raise ValidationError(
                    {'ingredients': 'Ингредиенты не могут повторяться!'}
-               )
+                )
             ingredient_ids.add(ingredient_id)
             ingredients_set.add(ingredient_id)
 
@@ -410,24 +410,27 @@ class SubscriptionSerializer(serializers.ModelSerializer):
     def get_is_subscribed(self, instance):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            return instance.author.subscribing.filter(user=request.user).exists()
+            return instance.author.subscribing.filter(user=request.user
+                                                      ).exists()
         return False
 
     def get_recipes(self, instance):
         request = self.context.get('request')
-        recipes_limit = int(request.query_params.get('recipes_limit', RECIPES_LIMIT_DEFAULT))
+        recipes_limit = int(request.query_params.get('recipes_limit',
+                                                     RECIPES_LIMIT_DEFAULT))
         recipes = instance.author.recipes.all()[:recipes_limit]
         return RecipeShortSerializer(recipes, many=True).data
 
     def get_recipes_count(self, instance):
         return instance.author.recipes.count()
-    
+
     def validate(self, attrs):
         user = attrs.get('user')
         author = attrs.get('author')
 
         if user == author:
-            raise ValidationError({'detail': 'Вы не можете подписаться на себя.'})
+            raise ValidationError(
+                {'detail': 'Вы не можете подписаться на себя.'})
 
         return attrs
 
