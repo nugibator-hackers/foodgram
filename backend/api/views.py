@@ -63,7 +63,7 @@ class UserViewSet(ModelViewSet):
                 user.avatar.delete()
                 user.save()
             return Response(status=status.HTTP_204_NO_CONTENT)
-        elif request.method == 'GET':
+        if request.method == 'GET':
             if user.avatar:
                 return Response(
                     {'avatar': request.build_absolute_uri(user.avatar.url)})
@@ -111,16 +111,13 @@ class UserViewSet(ModelViewSet):
         if request.method == 'POST':
             recipes_limit = request.query_params.get('recipes_limit', 5)
 
-            if user == author:
-                return Response(
-                    {'detail': 'Вы не можете подписаться на себя.'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+            # if user == author:
+            #     return Response(
+            #         {'detail': 'Вы не можете подписаться на себя.'},
+            #         status=status.HTTP_400_BAD_REQUEST
+            #     )
 
-            existing_subscription = Follow.objects.filter(
-                user=user,
-                author=author
-            ).first()
+            existing_subscription = user.subscribing.filter(author=author).first()
 
             if existing_subscription:
                 serializer = SubscriptionSerializer(
@@ -142,8 +139,7 @@ class UserViewSet(ModelViewSet):
             return Response(serializer.data,
                             status=status.HTTP_201_CREATED)
 
-        subscription = Follow.objects.filter(
-            user=user, author=author).first()
+        subscription = user.subscribing.filter(author=author).first()
 
         if subscription:
             subscription.delete()

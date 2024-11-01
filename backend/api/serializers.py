@@ -6,6 +6,8 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.fields import SerializerMethodField
 from rest_framework.relations import PrimaryKeyRelatedField
 from rest_framework.serializers import ModelSerializer
+
+from backend.constants import MAXVALUE, MINVALUE, RECIPES_LIMIT_DEFAULT
 from recipes.models import (Ingredient, Recipe, RecipeIngredient, Tag)
 from users.models import Follow
 
@@ -92,9 +94,7 @@ class UsersSerializer(UserSerializer):
         user = self.context['request'].user
         if user.is_anonymous or user == obj:
             return False
-        is_subscribed = Follow.objects.filter(
-            user=user, author=obj).exists()
-        return is_subscribed
+        return obj.subscribing.filter(user=user).exists()
 
 
 class UsersCreateSerializer(UserCreateSerializer):
@@ -192,13 +192,13 @@ class RecipeReadSerializer(ModelSerializer):
 class RecipeIngredientWriteSerializer(ModelSerializer):
     id = serializers.IntegerField(source='ingredient.id')
     amount = serializers.IntegerField(
-        min_value=1,
-        max_value=1000,
+        min_value=MINVALUE,
+        max_value=MAXVALUE,
         error_messages={
             'min_value':
-                'Количество ингредиентов должно быть больше 1',
+                f'Количество ингредиентов должно быть больше {MINVALUE}',
             'max_value':
-                'Количество ингредиентов должно быть меньше 1000',
+                f'Количество ингредиентов должно быть меньше {MAXVALUE}',
         }
     )
 
@@ -218,11 +218,11 @@ class RecipeWriteSerializer(ModelSerializer):
         source='ingredient_list', many=True,
     )
     cooking_time = serializers.IntegerField(
-        min_value=1,
-        max_value=1000,
+        min_value=MINVALUE,
+        max_value=MAXVALUE,
         error_messages={
-            'min_value': 'Время приготовления не менее 1 минут!',
-            'max_value': 'Время приготовления не более 1000 минут!',
+            'min_value': f'Время приготовления не менее {MINVALUE} минут!',
+            'max_value': f'Время приготовления не более {MAXVALUE} минут!',
         }
     )
 
@@ -256,63 +256,100 @@ class RecipeWriteSerializer(ModelSerializer):
 
         return value
 
+    # def validate_ingredients(self, value):
+    #     ingredients = value
+    #     if not ingredients:
+    #         raise ValidationError(
+    #             {'ingredients': 'Нужен хотя бы один ингредиент!'}
+    #         )
+
+    #     ingredients_list = set()
+
+    #     for item in ingredients:
+    #         if 'id' not in item['ingredient']:
+    #             raise ValidationError(
+    #                 {'ingredients': 'Указан некорректный формат ингредиента!'}
+    #             )
+
+    #         try:
+    #             ingredient = Ingredient.objects.get(
+    #                 id=item['ingredient']['id'])
+    #         except Ingredient.DoesNotExist:
+    #             raise ValidationError(
+    #                 {'ingredients': 'Ингредиент не существует!'}
+    #             )
+
+    #         amount = item.get('amount')
+    #         if amount is None or amount < 1:
+    #             raise ValidationError({
+    #                 'amount': (
+    #                     'Количество ингредиентов должно быть больше 1'
+    #                 )
+    #             })
+
+    #         if ingredient in ingredients_list:
+    #             raise ValidationError(
+    #                 {'ingredients': 'Ингредиенты не могут повторяться!'}
+    #             )
+
+    #         ingredients_list.append(ingredient)
+
+    #     return value
     def validate_ingredients(self, value):
         ingredients = value
         if (
-            ingredients is None
-            or not isinstance(ingredients, list)
-            or len(ingredients) == 0
+        ingredients is None
+        or not isinstance(ingredients, list)
+        or len(ingredients) == 0
         ):
-            raise ValidationError(
+         raise ValidationError(
                 {'ingredients': 'Нужен хотя бы один ингредиент!'}
             )
 
-        ingredients_list = []
+        ingredients_set = set()
+        ingredient_ids = set()
 
         for item in ingredients:
-            if 'id' not in item['ingredient']:
-                raise ValidationError(
-                    {'ingredients': 'Указан некорректный формат ингредиента!'}
-                )
-
-            try:
-                ingredient = Ingredient.objects.get(
-                    id=item['ingredient']['id'])
-            except Ingredient.DoesNotExist:
-                raise ValidationError(
-                    {'ingredients': 'Ингредиент не существует!'}
-                )
-
-            amount = item.get('amount')
-            if amount is None or amount < 1:
-                raise ValidationError({
-                    'amount': (
-                        'Количество ингредиентов должно быть больше 1'
-                    )
-                })
-
-            if ingredient in ingredients_list:
-                raise ValidationError(
-                    {'ingredients': 'Ингредиенты не могут повторяться!'}
-                )
-
-            ingredients_list.append(ingredient)
+            ingredient_id = item['ingredient']['id']
+            if ingredient_id in ingredient_ids:
+               raise ValidationError(
+                   {'ingredients': 'Ингредиенты не могут повторяться!'}
+               )
+            ingredient_ids.add(ingredient_id)
+            ingredients_set.add(ingredient_id)
 
         return value
 
+    # def validate_tags(self, value):
+    #     tags = value
+    #     if not tags:
+    #         raise ValidationError(
+    #             {'tags': 'Нужно выбрать хотя бы один тег!'}
+    #         )
+    #     tags_list = []
+    #     for tag in tags:
+    #         if tag in tags_list:
+    #             raise ValidationError(
+    #                 {'tags': 'Теги должны быть уникальными!'}
+    #             )
+    #         tags_list.append(tag)
+    #     return value
     def validate_tags(self, value):
         tags = value
         if not tags:
             raise ValidationError(
                 {'tags': 'Нужно выбрать хотя бы один тег!'}
             )
-        tags_list = []
+
+        tags_set = set()  # Множество для хранения уникальных тегов
+
         for tag in tags:
-            if tag in tags_list:
+            if tag in tags_set:
                 raise ValidationError(
                     {'tags': 'Теги должны быть уникальными!'}
                 )
-            tags_list.append(tag)
+            tags_set.add(tag)  # Добавляем тег в множество
+
         return value
 
     def create_ingredients(self, ingredients, recipe):
@@ -342,7 +379,7 @@ class RecipeWriteSerializer(ModelSerializer):
 
         instance = super().update(instance, validated_data)
         instance.tags.set(tags_data)
-        instance.ingredient_list.set([])
+        instance.ingredient_list.clear()
         self.create_ingredients(ingredients_data, instance)
         return instance
 
@@ -373,20 +410,26 @@ class SubscriptionSerializer(serializers.ModelSerializer):
     def get_is_subscribed(self, instance):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            return Follow.objects.filter(
-                user=request.user,
-                author=instance.author
-            ).exists()
+            return instance.author.subscribing.filter(user=request.user).exists()
         return False
 
     def get_recipes(self, instance):
         request = self.context.get('request')
-        recipes_limit = int(request.query_params.get('recipes_limit', 5))
+        recipes_limit = int(request.query_params.get('recipes_limit', RECIPES_LIMIT_DEFAULT))
         recipes = instance.author.recipes.all()[:recipes_limit]
         return RecipeShortSerializer(recipes, many=True).data
 
     def get_recipes_count(self, instance):
         return instance.author.recipes.count()
+    
+    def validate(self, attrs):
+        user = attrs.get('user')
+        author = attrs.get('author')
+
+        if user == author:
+            raise ValidationError({'detail': 'Вы не можете подписаться на себя.'})
+
+        return attrs
 
 
 class SimpleUserSerializer(serializers.ModelSerializer):
@@ -400,8 +443,7 @@ class SimpleUserSerializer(serializers.ModelSerializer):
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            return Follow.objects.filter(user=request.user,
-                                         author=obj).exists()
+            return obj.subscribing.filter(user=request.user).exists()
         return False
 
 

@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import UniqueConstraint
+from backend.constants import MAXVALUE, MINVALUE
 
 
 User = get_user_model()
@@ -79,12 +80,12 @@ class Recipe(models.Model):
         verbose_name='Время приготовления',
         validators=[
             MinValueValidator(
-                1,
-                message='Время приготовления не менее 1 минуты!'
+                MINVALUE,
+                message=f'Время приготовления не менее {MINVALUE} минуты!'
             ),
             MaxValueValidator(
-                1000,
-                message='Время приготовления не более 1000 минут!'
+                MAXVALUE,
+                message=f'Время приготовления не более {MAXVALUE} минут!'
             ),
         ],
     )
@@ -119,12 +120,12 @@ class RecipeIngredient(models.Model):
         verbose_name='Количество',
         validators=[
             MinValueValidator(
-                1,
-                message='Время приготовления не менее 1 минуты!'
+                MINVALUE,
+                message=f'Время приготовления не менее {MINVALUE} минуты!'
             ),
             MaxValueValidator(
-                1000,
-                message='Время приготовления не более 1000 минут!'
+                MAXVALUE,
+                message=f'Время приготовления не более {MAXVALUE} минут!'
             ),
         ],
     )
