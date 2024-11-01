@@ -33,7 +33,7 @@ class PasswordSerializer(serializers.Serializer):
     def validate_current_password(self, value):
         user = self.context['request'].user
         if not user.check_password(value):
-            raise serializers.ValidationError("Текущий пароль неверен.")
+            raise serializers.ValidationError('Текущий пароль неверен.')
         return value
 
     def validate(self, data):
@@ -242,11 +242,11 @@ class RecipeWriteSerializer(ModelSerializer):
     def validate(self, data):
         if 'ingredient_list' not in data:
             raise ValidationError(
-                {"ingredients": "В запросе не передано поле."})
+                {'ingredients': 'В запросе не передано поле.'})
 
         if 'tags' not in data:
             raise ValidationError(
-                {"tags": "В запросе не передано поле."})
+                {'tags': 'В запросе не передано поле.'})
 
         return data
 
@@ -256,57 +256,13 @@ class RecipeWriteSerializer(ModelSerializer):
 
         return value
 
-    # def validate_ingredients(self, value):
-    #     ingredients = value
-    #     if not ingredients:
-    #         raise ValidationError(
-    #             {'ingredients': 'Нужен хотя бы один ингредиент!'}
-    #         )
-
-    #     ingredients_list = set()
-
-    #     for item in ingredients:
-    #         if 'id' not in item['ingredient']:
-    #             raise ValidationError(
-    #               {'ingredients': 'Указан некорректный формат ингредиента!'}
-    #             )
-
-    #         try:
-    #             ingredient = Ingredient.objects.get(
-    #                 id=item['ingredient']['id'])
-    #         except Ingredient.DoesNotExist:
-    #             raise ValidationError(
-    #                 {'ingredients': 'Ингредиент не существует!'}
-    #             )
-
-    #         amount = item.get('amount')
-    #         if amount is None or amount < 1:
-    #             raise ValidationError({
-    #                 'amount': (
-    #                     'Количество ингредиентов должно быть больше 1'
-    #                 )
-    #             })
-
-    #         if ingredient in ingredients_list:
-    #             raise ValidationError(
-    #                 {'ingredients': 'Ингредиенты не могут повторяться!'}
-    #             )
-
-    #         ingredients_list.append(ingredient)
-
-    #     return value
     def validate_ingredients(self, value):
         ingredients = value
-        if (
-            ingredients is None
-            or not isinstance(ingredients, list)
-            or len(ingredients) == 0
-        ):
+        if not ingredients:
             raise ValidationError(
                 {'ingredients': 'Нужен хотя бы один ингредиент!'}
             )
 
-        ingredients_set = set()
         ingredient_ids = set()
 
         for item in ingredients:
@@ -316,24 +272,9 @@ class RecipeWriteSerializer(ModelSerializer):
                     {'ingredients': 'Ингредиенты не могут повторяться!'}
                 )
             ingredient_ids.add(ingredient_id)
-            ingredients_set.add(ingredient_id)
 
         return value
 
-    # def validate_tags(self, value):
-    #     tags = value
-    #     if not tags:
-    #         raise ValidationError(
-    #             {'tags': 'Нужно выбрать хотя бы один тег!'}
-    #         )
-    #     tags_list = []
-    #     for tag in tags:
-    #         if tag in tags_list:
-    #             raise ValidationError(
-    #                 {'tags': 'Теги должны быть уникальными!'}
-    #             )
-    #         tags_list.append(tag)
-    #     return value
     def validate_tags(self, value):
         tags = value
         if not tags:

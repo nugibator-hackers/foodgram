@@ -10,6 +10,7 @@ from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
+from backend.constants import RECIPES_LIMIT_DEFAULT
 from recipes.models import (FavoriteRecipe, Ingredient, Recipe,
                             RecipeIngredient, ShoppingCart, Tag)
 from .serializers import (IngredientSerializer, RecipeReadSerializer,
@@ -109,13 +110,8 @@ class UserViewSet(ModelViewSet):
         author = get_object_or_404(User, pk=pk)
 
         if request.method == 'POST':
-            recipes_limit = request.query_params.get('recipes_limit', 5)
-
-            # if user == author:
-            #     return Response(
-            #         {'detail': 'Вы не можете подписаться на себя.'},
-            #         status=status.HTTP_400_BAD_REQUEST
-            #     )
+            recipes_limit = request.query_params.get('recipes_limit',
+                                                     RECIPES_LIMIT_DEFAULT)
 
             existing_subscription = user.subscribing.filter(author=author
                                                             ).first()
