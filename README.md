@@ -11,6 +11,8 @@
 
 Данные суперпользователя:  логин — kolya.kurenkov.1999@gmail.com пароль — kolya123
 
+Сайт доступен по адресу: [https://foodgram64.hopto.org](https://foodgram64.hopto.org)
+
 ## Автор
 
 [nugibator-hackers](https://github.com/nugibator-hackers)
