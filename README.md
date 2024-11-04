@@ -9,7 +9,7 @@
 
 По [адресу](http://localhost) изучите фронтенд веб-приложения, а по [адресу](http://localhost/api/docs/) — спецификацию API.
 
-Данные суперпользователя:  логин — kolya.kurenkov.1999@gmail.com пароль — kolya123
+Данные суперпользователя:  логин — kolya.kurenkov.1999@icloud.com пароль — kolya123
 
 Сайт доступен по адресу: [https://foodgram64.hopto.org](https://foodgram64.hopto.org)
 
